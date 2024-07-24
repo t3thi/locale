@@ -23,7 +23,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class PopulateCommand extends Command
 {
-    protected $migration;
+    protected PopulateLocales $migration;
 
     public function __construct(PopulateLocales $migration = null, string $name = null)
     {
@@ -31,10 +31,11 @@ class PopulateCommand extends Command
         parent::__construct($name);
     }
 
-    public function execute(InputInterface $input, OutputInterface $output)
+    public function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
         $this->migration->populate();
         $io->success('Updated all locales');
+        return Command::SUCCESS;
     }
 }

@@ -20,15 +20,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class TcaSchemaExtender
 {
-    /**
-     * @var LocalizableTableProvider
-     */
-    protected $provider;
-
-    /**
-     * @var string
-     */
-    protected $schemaString = 'CREATE TABLE %s (sys_locale varchar(20) DEFAULT NULL);';
+    protected LocalizableTableProvider $provider;
+    protected string $schemaString = 'CREATE TABLE %s (sys_locale varchar(20) DEFAULT NULL);';
 
     public function __construct(LocalizableTableProvider $provider = null)
     {

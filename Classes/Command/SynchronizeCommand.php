@@ -25,24 +25,24 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class SynchronizeCommand extends Command
 {
-    protected $synchronizer;
+    protected Synchronizer $synchronizer;
 
-    public function __construct(Synchronizer $synchronizer, string $name = null)
+    public function __construct(Synchronizer $synchronizer = null, string $name = null)
     {
         $this->synchronizer = $synchronizer ?? GeneralUtility::makeInstance(Synchronizer::class);
         parent::__construct($name);
     }
 
-    public function configure()
+    public function configure(): void
     {
         $this->addOption(
             'tables',
             't',
-            InputOption::VALUE_IS_ARRAY & InputOption::VALUE_REQUIRED
+            InputOption::VALUE_IS_ARRAY + InputOption::VALUE_REQUIRED
         );
     }
 
-    public function execute(InputInterface $input, OutputInterface $output)
+    public function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
         $tables = $input->getOption('tables');
@@ -55,5 +55,6 @@ class SynchronizeCommand extends Command
                 $io->success('Synchronized locales for ' . $table);
             }
         }
+        return Command::SUCCESS;
     }
 }

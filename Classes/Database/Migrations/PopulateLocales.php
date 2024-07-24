@@ -25,15 +25,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class PopulateLocales
 {
-    /**
-     * @var LocalizableTableProvider
-     */
-    protected $provider;
-
-    /**
-     * @var LocaleDetector
-     */
-    protected $localeDetector;
+    protected LocalizableTableProvider $provider;
+    protected LocaleDetector $localeDetector;
 
     public function __construct(LocalizableTableProvider $provider = null, LocaleDetector $localeDetector = null)
     {
@@ -67,8 +60,8 @@ class PopulateLocales
                 $queryBuilder->addSelect($this->provider->getTranslationPointerField($table));
             }
 
-            $statement = $queryBuilder->execute();
-            while ($record = $statement->fetch()) {
+            $statement = $queryBuilder->executeQuery();
+            while ($record = $statement->fetchAssociative()) {
                 $this->updateLocaleForRecords($table, $record);
             }
         }
@@ -81,7 +74,7 @@ class PopulateLocales
         $this->getDatabaseConnection($table)->update(
             $table,
             [
-                'sys_locale' => $locale
+                'sys_locale' => $locale->getName()
             ],
             [
                 'pid' => (int)$record['pid'],
@@ -92,6 +85,6 @@ class PopulateLocales
 
     protected function getDatabaseConnection(string $table): Connection
     {
-        return GeneralUtility::makeInstance(ConnectionPool::class)->getConnectionForTable($table);
+        return GeneralUtility::makeInstance(ConnectionPool::class)?->getConnectionForTable($table);
     }
 }

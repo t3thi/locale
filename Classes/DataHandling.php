@@ -50,12 +50,12 @@ class DataHandling
             return;
         }
         if ($status === 'new') {
-            $fieldArray['sys_locale'] = $this->localeDetector->getValidLocaleForRecord($table, $fieldArray);
+            $fieldArray['sys_locale'] = $this->localeDetector->getValidLocaleForRecord($table, $fieldArray)->getName();
         } elseif (isset($fieldArray[$this->provider->getLanguageIdField($table)])) {
             // updating a record where the sys_language record was modified
             $record = $fieldArray;
             $record['uid'] = (int)$id;
-            $fieldArray['sys_locale'] = $this->localeDetector->getValidLocaleForRecord($table, $record);
+            $fieldArray['sys_locale'] = $this->localeDetector->getValidLocaleForRecord($table, $record)->getName();
         }
     }
 
@@ -64,7 +64,7 @@ class DataHandling
         if (!$this->provider->isLocalizableTable($table)) {
             return;
         }
-        GeneralUtility::makeInstance(Synchronizer::class)->synchronizeRecordByTableAndId($table, $uid);
+        GeneralUtility::makeInstance(Synchronizer::class)?->synchronizeRecordByTableAndId($table, $uid);
     }
 
     public function moveRecord_afterAnotherElementPostProcess($table, $uid, $destPid, $origDestPid, $moveRec, $updateFields, DataHandler $dataHandler)
@@ -72,6 +72,6 @@ class DataHandling
         if (!$this->provider->isLocalizableTable($table)) {
             return;
         }
-        GeneralUtility::makeInstance(Synchronizer::class)->synchronizeRecordByTableAndId($table, $uid);
+        GeneralUtility::makeInstance(Synchronizer::class)?->synchronizeRecordByTableAndId($table, $uid);
     }
 }

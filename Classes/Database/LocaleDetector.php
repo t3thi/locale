@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace B13\Locale\Database;
 
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
+use TYPO3\CMS\Core\Localization\Locale;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -20,15 +21,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class LocaleDetector
 {
-    /**
-     * @var LocalizableTableProvider
-     */
-    protected $provider;
-
-    /**
-     * @var SiteFinder
-     */
-    protected $siteFinder;
+    protected LocalizableTableProvider $provider;
+    protected SiteFinder $siteFinder;
 
     public function __construct(LocalizableTableProvider $provider = null, SiteFinder $siteFinder = null)
     {
@@ -36,9 +30,9 @@ class LocaleDetector
         $this->siteFinder = $siteFinder ?? GeneralUtility::makeInstance(SiteFinder::class);
     }
 
-    public function getValidLocaleForRecord(string $table, array $record): ?string
+    public function getValidLocaleForRecord(string $table, array $record): Locale
     {
-        $locale = null;
+        $locale = new Locale();
 
         if ($table === 'pages') {
             $pageId = (int)($record[$this->provider->getTranslationPointerField($table)] ?: $record['uid']);
@@ -48,28 +42,19 @@ class LocaleDetector
         $languageIdField = $this->provider->getLanguageIdField($table);
         $languageId = (int)$record[$languageIdField];
         if ($languageId === -1) {
-            $locale = 't3_all';
+            return new Locale('t3all');
         } elseif ($pageId === 0) {
             // Rootlevel, what should we do?
-            $locale = null;
-        } elseif ($pageId === -1) {
-            // v9 with workspaces => do your magic
-            $locale = null;
-        } else {
+            return $locale;
+        }  else {
             try {
                 $site = $this->siteFinder->getSiteByPageId($pageId);
-                $languageDetails = $site->getLanguageById($languageId);
-                $locale = $languageDetails->getLocale();
+                return $site->getLanguageById($languageId)->getLocale();
             } catch (SiteNotFoundException $exception) {
                 // @todo: what to do here?
-                $locale = null;
             } catch (\InvalidArgumentException $exception) {
                 // @todo: what to do here?
-                $locale = null;
             }
-        }
-        if (is_string($locale) && strpos($locale, '.') !== false) {
-            [$locale] = explode('.', $locale);
         }
         return $locale;
     }

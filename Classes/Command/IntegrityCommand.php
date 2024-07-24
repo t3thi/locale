@@ -27,8 +27,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class IntegrityCommand extends Command
 {
-    protected $provider;
-    protected $localeDetector;
+    protected LocalizableTableProvider $provider;
+    protected LocaleDetector $localeDetector;
 
     public function __construct(LocalizableTableProvider $provider = null, LocaleDetector $localeDetector = null, string $name = null)
     {
@@ -37,7 +37,7 @@ class IntegrityCommand extends Command
         parent::__construct($name);
     }
 
-    public function execute(InputInterface $input, OutputInterface $output)
+    public function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
         $itemsWithoutLocale = [];
@@ -49,16 +49,16 @@ class IntegrityCommand extends Command
                 ->select('*')
                 ->from($table)
                 ->orderBy($this->provider->getLanguageIdField($table))
-                ->execute();
+                ->executeQuery();
             // Find all items without a locale
-            while ($record = $statement->fetch()) {
+            while ($record = $statement->fetchAssociative()) {
                 if ($record['sys_locale'] === null) {
                     $itemsWithoutLocale[] = $table . ':' . $record['uid'] . ' (PID ' . $record['pid'] . ')';
                 } else {
                     // Check if the locale matches the one stored in the database
                     $locale = $this->localeDetector->getValidLocaleForRecord($table, $record);
-                    if ($locale !== $record['sys_locale']) {
-                        $itemsWithWrongLocale[] = $table . ':' . $record['uid'] . ' (record is "' . $record['sys_locale'] . '" should be "' . ($locale ?? 'null') . '")';
+                    if ($locale->getName() !== $record['sys_locale']) {
+                        $itemsWithWrongLocale[] = $table . ':' . $record['uid'] . ' (record is "' . $record['sys_locale'] . '" should be "' . ($locale->getName()) . '")';
                     }
                 }
             }
@@ -79,10 +79,11 @@ class IntegrityCommand extends Command
         if (empty($itemsWithoutLocale) && empty($itemsWithWrongLocale)) {
             $io->success('Locale integrity is perfect');
         }
+        return Command::SUCCESS;
     }
 
     protected function getDatabaseConnection(string $table): Connection
     {
-        return GeneralUtility::makeInstance(ConnectionPool::class)->getConnectionForTable($table);
+        return GeneralUtility::makeInstance(ConnectionPool::class)?->getConnectionForTable($table);
     }
 }

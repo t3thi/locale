@@ -55,7 +55,7 @@ class Synchronizer
             return;
         }
         $statement = $this->getDatabaseConnection($table)->select(['*'], $table);
-        while ($record = $statement->fetch()) {
+        while ($record = $statement->fetchAssociative()) {
             $this->synchronizeRecordByTableAndRecord($table, $record);
         }
     }
@@ -91,12 +91,12 @@ class Synchronizer
             return;
         }
         $locale = $this->localeDetector->getValidLocaleForRecord($table, $record);
-        if ($locale !== $record['sys_locale']) {
-            $this->updateRecord($table, (int)$record['uid'], $locale);
+        if ($locale->getName() !== $record['sys_locale']) {
+            $this->updateRecord($table, (int)$record['uid'], $locale->getName());
         }
     }
 
-    protected function updateRecord(string $table, int $uid, string $locale)
+    protected function updateRecord(string $table, int $uid, string $locale): void
     {
         $this->getDatabaseConnection($table)->update(
             $table,
@@ -111,6 +111,6 @@ class Synchronizer
 
     protected function getDatabaseConnection(string $table): Connection
     {
-        return GeneralUtility::makeInstance(ConnectionPool::class)->getConnectionForTable($table);
+        return GeneralUtility::makeInstance(ConnectionPool::class)?->getConnectionForTable($table);
     }
 }
